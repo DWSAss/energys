@@ -50,7 +50,7 @@ const Header = () => {
         <Link to="/">Home</Link>
         <Link to="/services">Services</Link>
         <Link to="/account">My Account</Link>
-        <Link to="/apps">User Panel</Link> {/* Панель администратора */}
+        {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
       </nav>
     </header>
@@ -430,7 +430,7 @@ function Apps() {
       purchaseType,
     };
   
-    fetch("https://script.google.com/macros/s/AKfycbzOkHwxjikoC6CwLFUdJ58dCFyKsmUrRht1v90T2r6HB3L60J0z7Yvy4nQmL-8vvJSbPg/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbwaa5So5pIECqg3fibdUDZAq-UyqR9M5OYyLDym3bYn1kXbsCGVFWa3wi7rbBs35w0r/exec", {
       method: "POST",
       body: new URLSearchParams(data),
       headers: {
@@ -489,7 +489,7 @@ function Apps() {
 
           {/* Центральная часть с формой */}
           <div className="col-4">
-            <div className="d-flex justify-content-center mb-2">
+            <div className="d-flex justify-content-center">
               <button
                 type="button"
                 className="btn btn-lg btn-warning mb-2"
@@ -607,7 +607,7 @@ function Apps() {
                 name="comment"
                 cols="100"
                 rows="5"
-                style={{ fontSize: "18px", backgroundColor: '#F0FFFF',}}
+                style={{ fontSize: "18px", backgroundColor: 'white',}}
               />
             </div>
             <div className="d-flex justify-content-center">
