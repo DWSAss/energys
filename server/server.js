@@ -6,13 +6,12 @@ require("dotenv").config();
 const path = require("path");
 
 const app = express();
-
+require('dotenv').config();
 const port = process.env.PORT || 10000;
 app.listen(port, () => {
     console.log(`🚀 Сервер запущен на порту ${port}`);
 });
 
-require('dotenv').config();
 
 const JWT_SECRET = "secret_key"; 
 // Лучше использовать process.env.JWT_SECRET
@@ -180,9 +179,4 @@ app.delete("/admin/users/:id", authenticateToken, verifyAdmin, (req, res) => {
 // Специальный маршрут для пользователей (isAdmin = 1 или 2)
 app.get("/user/profile", authenticateToken, verifyUser, (req, res) => {
     res.json({ message: "Доступ разрешен", user: req.user });
-});
-
-// Запуск сервера
-app.listen(PORT, () => {
-    console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
