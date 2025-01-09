@@ -13,8 +13,7 @@
 "start": "react-scripts start --port 3001",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "proxy": "http://localhost:10000"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
