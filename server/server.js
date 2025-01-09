@@ -16,7 +16,7 @@ const JWT_SECRET = "secret_key";
 app.use(cors());
 app.use(express.json());
 
-// Подключение к базе данных
+// Подключение к БД
 const connection = mysql.createConnection({
     host: process.env.DB_HOST || "localhost",
     user: process.env.DB_USER || "root",
