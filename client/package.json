@@ -10,8 +10,10 @@
     "react-scripts": "^5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "client": "npm start --prefix client --port 3001",
+    "server": "nodemon server/server.js",
+    "build": "npm run build --prefix client",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
