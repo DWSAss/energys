@@ -105,7 +105,7 @@ function Account() {
 
   const getAccountData = async (token) => {
     try {
-      const response = await axios.get("http://localhost:10000/account", { // Используем порт 10000 (если сервер там)
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/account`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
