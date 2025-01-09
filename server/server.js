@@ -8,7 +8,11 @@ const path = require("path");
 const app = express();
 
 // Константы
-const PORT = process.env.PORT || 10001;
+const port = process.env.PORT || 10000;
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
+
 const JWT_SECRET = "secret_key"; 
 // Лучше использовать process.env.JWT_SECRET
 
