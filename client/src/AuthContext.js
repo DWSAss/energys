@@ -19,15 +19,39 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(!!token);
     }, []);
 
-    const updateAuthState = (token, role, name) => {
+    const decodeToken = (token) => {
+        try {
+            const base64Url = token.split(".")[1]; // Получаем payload
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const decodedData = JSON.parse(decodeURIComponent(escape(atob(base64)))); // Декодируем корректно
+            return decodedData;
+        } catch (e) {
+            console.error("Ошибка при декодировании токена:", e);
+            return {};
+        }
+    };
+    
+    
+    const updateAuthState = (token, role) => {
+        const decoded = decodeToken(token); // Декодируем токен
+        const name = decoded.name || "Гость"; // Извлекаем имя
+    
+        console.log("Декодированные данные из токена:", decoded);
+    
         localStorage.setItem("token", token);
-        localStorage.setItem("role", role); // Сохраняем роль пользователя
-        localStorage.setItem("name", name); // Сохраняем имя пользователя как "name"
+        localStorage.setItem("role", role);
+        localStorage.setItem("name", name); // Теперь имя должно сохраняться
+    
         setIsAuthenticated(!!token);
-        setRole(role);  // Устанавливаем роль
-        setUserName(name); // Устанавливаем имя пользователя
+        setRole(role);
+        setUserName(name);
     };
 
+    useEffect(() => {
+        const storedName = localStorage.getItem("name");
+        console.log("Имя пользователя из localStorage:", storedName); 
+    }, []);
+    
     return (
         <AuthContext.Provider value={{ role, isAuthenticated, userName, updateAuthState }}>
             {children}

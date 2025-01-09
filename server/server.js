@@ -72,7 +72,7 @@ app.post("/register", (req, res) => {
     }
 
     // Проверяем, существует ли пользователь
-    const checkQuery = "SELECT * FROM users WHERE email = ?";
+    const checkQuery = "SELECT * FROM Holodka WHERE email = ?";
     connection.query(checkQuery, [email], (err, result) => {
         if (err) {
             console.error("Ошибка при проверке пользователя:", err);
@@ -84,7 +84,7 @@ app.post("/register", (req, res) => {
         }
 
         // Новый пользователь по умолчанию будет гостем (isAdmin = 0)
-        const insertQuery = "INSERT INTO users (name, email, password, isAdmin) VALUES (?, ?, ?, 0)";
+        const insertQuery = "INSERT INTO Holodka (name, email, password, isAdmin) VALUES (?, ?, ?, 0)";
         connection.query(insertQuery, [name, email, password], (err) => {
             if (err) {
                 console.error("Ошибка при регистрации:", err);
@@ -99,7 +99,7 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
-    const query = "SELECT * FROM users WHERE email = ?";
+    const query = "SELECT * FROM Holodka WHERE email = ?";
     connection.query(query, [email], (err, result) => {
         if (err) {
             console.error("Ошибка входа:", err);
@@ -132,7 +132,7 @@ app.post("/login", (req, res) => {
 app.get("/account", authenticateToken, (req, res) => {
     const userId = req.user.id;
 
-    const query = "SELECT id, name, email, isAdmin FROM users WHERE id = ?";
+    const query = "SELECT id, name, email, isAdmin FROM Holodka WHERE id = ?";
     connection.query(query, [userId], (err, result) => {
         if (err) {
             console.error("Ошибка запроса:", err);
@@ -149,7 +149,7 @@ app.get("/account", authenticateToken, (req, res) => {
 
 // Получение списка пользователей (только админы)
 app.get("/admin/users", authenticateToken, verifyAdmin, (req, res) => {
-    const query = "SELECT id, name, email, isAdmin FROM users";
+    const query = "SELECT id, name, email, isAdmin FROM Holodka";
     connection.query(query, (err, result) => {
         if (err) {
             console.error("Ошибка получения пользователей:", err);
@@ -162,7 +162,7 @@ app.get("/admin/users", authenticateToken, verifyAdmin, (req, res) => {
 // Удаление пользователя (только админы)
 app.delete("/admin/users/:id", authenticateToken, verifyAdmin, (req, res) => {
     const { id } = req.params;
-    const query = "DELETE FROM users WHERE id = ?";
+    const query = "DELETE FROM Holodka WHERE id = ?";
     connection.query(query, [id], (err) => {
         if (err) {
             console.error("Ошибка удаления пользователя:", err);

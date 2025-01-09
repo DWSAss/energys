@@ -252,16 +252,35 @@ button:hover {
 
 .admin-panel {
   display: flex;
-  justify-content: space-around;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* Центрируем содержимое */
+  max-width: 100%; /* Ограничиваем ширину */
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box; /* Учитываем padding в ширине */
+  overflow: hidden; /* Обрезаем всё, что выходит за границы */
+}
+
+.admin-panel > * {
+  max-width: 100%; /* Убеждаемся, что вложенные элементы не выходят */
+  word-wrap: break-word; /* Переносим длинные слова */
+  overflow: hidden; /* Прячем лишнее */
+  text-align: center;
 }
 
 .Admins {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 колонки одинаковой ширины */
-  gap: 10px; /* Расстояние между элементами (опционально) */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Гибкие колонки */
+  gap: 10px; /* Расстояние между элементами */
+  padding: 10px;
+  max-width: 100%;
+  box-sizing: border-box; /* Учитываем padding */
+  justify-content: center;
+  overflow: hidden; /* Убирает возможные выступания за пределы контейнера */
+  width: 100%; /* Убедимся, что контейнер не выходит за ширину экрана */
 }
+
 
 .bntAdm {
   margin: 0 20px;

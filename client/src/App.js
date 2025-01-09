@@ -29,7 +29,7 @@ function App() {
             <Route path="/admin" element={isAuthenticated && role === "1" ? <AdminPanel /> : <Navigate to="/" />} />
             <Route path="/services" element={<Services />} />
             <Route path="/api" element={isAuthenticated && role === "2" ? <DWSApi /> : <Navigate to="/" />} />
-            <Route path="/apps" element={<Apps />}/>
+            <Route path="/apps" element={isAuthenticated && role === "2" ? <Apps /> : <Navigate to="/" />} />
             <Route path="/account" element={<Account />} />
           </Routes>
         </div>
@@ -105,16 +105,17 @@ function Account() {
 
   const getAccountData = async (token) => {
     try {
-      const response = await axios.get("/account", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axios.get("http://localhost:10000/account", { // Используем порт 10000 (если сервер там)
+        headers: { Authorization: `Bearer ${token}` },
       });
       return response.data;
     } catch (error) {
-      throw error;  // Перебрасываем ошибку для обработки в catch
+      console.error("Ошибка при запросе аккаунта:", error.response?.data || error.message);
+      throw error;
     }
   };
+  
+  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -239,6 +240,36 @@ const Modal = ({ id, title, content }) => {
 
 // Главный компонент
 function Apps() {
+
+          const [users, setUsers] = useState([]);
+          const [error, setError] = useState("");
+          const navigate = useNavigate();
+          const { role, isAuthenticated, name } = useAuth();  // Получаем роль и имя пользователя
+      
+          useEffect(() => {
+              const fetchUsers = async () => {
+                  const token = localStorage.getItem("token");
+                  if (!token) {
+                      setError("Токен не найден");
+                      navigate("/login"); 
+                      return;
+                  }
+      
+                  if (role !== "2") { // Если роль не "1", то доступ закрыт
+                      setError("У вас нет прав для доступа к этой странице.");
+                      navigate("/"); 
+                      return;
+                  }
+              };
+      
+              if (isAuthenticated) { // Проверяем, авторизован ли пользователь
+                  fetchUsers();
+              } else {
+                  setError("Пожалуйста, войдите в систему.");
+                  navigate("/login");
+              }
+          }, [role, isAuthenticated, navigate]);
+          
   // Массив для модальных окон "ДАНЯ"
   const leftModalContent = [
     {
@@ -394,6 +425,30 @@ function Apps() {
 
   const { userName } = useAuth(); // Получаем userName из контекста
 
+  const [account, setAccount] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log("Token from localStorage:", token);
+  
+    if (!token) {
+      return;
+    }
+  
+    const fetchAccountData = async () => {
+      try {
+        const data = await getAccountData(token);
+        console.log("Account data:", data);
+        setAccount(data);
+      } catch (error) {
+        console.error("Ошибка при получении данных пользователя:", error);
+        setError("Ошибка при загрузке данных.");
+      }
+    };
+  
+    fetchAccountData();
+  }, [navigate]); // useEffect зависит от navigate
+  
   const [formData, setFormData] = useState({
     name: "",
     fio: "",
@@ -410,17 +465,25 @@ function Apps() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
   
-  // Ваш handleSubmit
+  // Обработчик отправки формы
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { name, fio, phone, dataroz, region, document, message, purchaseType } = formData;
-    if (!name || !fio || !phone || !dataroz || !region || !message || !purchaseType || !document) {
+    
+    const { fio, phone, dataroz, region, document, message, purchaseType } = formData;
+  
+    // Проверка на заполненность всех полей
+    if (!fio || !phone || !dataroz || !region || !message || !purchaseType || !document) {
       alert("Пожалуйста, заполните все обязательные поля.");
       return;
     }
   
+    // Проверяем, загрузился ли account
+    if (!account || !account.name) {
+      alert("Ошибка: Данные пользователя не загружены.");
+      return;
+    }
+  
     const data = {
-      name,
       fio,
       phone,
       dataroz,
@@ -428,9 +491,10 @@ function Apps() {
       document,
       message,
       purchaseType,
+      accountName: account.name, // Передаём имя из аккаунта
     };
   
-    fetch("https://script.google.com/macros/s/AKfycbwaa5So5pIECqg3fibdUDZAq-UyqR9M5OYyLDym3bYn1kXbsCGVFWa3wi7rbBs35w0r/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbz6cbX2tW3nYQn_5L8bdcAogAfskHUc5Vf_qrjtWS46PmKAlc2nu2Fpb0d1cbH-r2Ld/exec", {
       method: "POST",
       body: new URLSearchParams(data),
       headers: {
@@ -447,7 +511,6 @@ function Apps() {
       })
       .finally(() => {
         setFormData({
-          name: "",
           fio: "",
           phone: "",
           message: "",
@@ -457,7 +520,7 @@ function Apps() {
           purchaseType: "",
         });
       });
-  };
+  };  
 
   return (
     <main>
@@ -505,15 +568,6 @@ function Apps() {
                 title="Информация о клиенте"
                 content={
                   <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', padding: '20px', backgroundColor: '#F0FFFF', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', maxWidth: '400px', margin: '0 auto' }}>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Имя Холодника"
-                      required
-                      style={{ padding: '10px', marginBottom: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '5px' }}
-                    />
                     <input
                       type="text"
                       name="fio"

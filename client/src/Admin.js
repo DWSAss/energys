@@ -68,7 +68,7 @@ const AdminPanel = () => {
                 <ul className="Admins">
                     {users.map((user) => (
                         <li key={user.id}>
-                            {user.name} ({user.email})
+                           <img style={{width: "40px"}} src="https://s6.ezgif.com/tmp/ezgif-6-0978c6aea3.gif" alt="Sticker" /> {user.name} ({user.email})
                             <button className="bntAdm" onClick={() => handleDeleteUser(user.id)}>
                                 Удалить
                             </button>
