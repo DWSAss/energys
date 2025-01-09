@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Создание экземпляра axios для API
 const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || "http://localhost:10000",  // Использование переменной окружения для API URL
+    baseURL: process.env.REACT_APP_API_URL || "http://localhost:3001",  // Использование переменной окружения для API URL
     headers: {
         "Content-Type": "application/json",
     },
