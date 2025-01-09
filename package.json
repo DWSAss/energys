@@ -56,5 +56,5 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "concurrently": "^9.1.2"
   },
-  "proxy": "http://localhost:10000"
+  "proxy": "http://localhost:10001"
 }

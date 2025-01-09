@@ -8,7 +8,7 @@ const path = require("path");
 const app = express();
 
 // Константы
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 10001;
 const JWT_SECRET = "secret_key"; 
 // Лучше использовать process.env.JWT_SECRET
 
