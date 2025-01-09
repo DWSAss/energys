@@ -50,7 +50,7 @@ const Header = () => {
         <Link to="/">Home</Link>
         <Link to="/services">Services</Link>
         <Link to="/account">My Account</Link>
-        {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}  {/* Панель администратора */}
+        <Link to="/apps">User Panel</Link> {/* Панель администратора */}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
       </nav>
     </header>
