@@ -7,7 +7,7 @@ const path = require("path");
 
 const app = express();
 require('dotenv').config();
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 10001;
 app.listen(port, () => {
     console.log(`🚀 Сервер запущен на порту ${port}`);
 });
