@@ -460,7 +460,6 @@ function Apps() {
     purchaseType: "",
   });
   
-  // Функция для обработки изменений в форме
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
