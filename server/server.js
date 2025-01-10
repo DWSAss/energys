@@ -82,28 +82,36 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
+    console.log("📩 Получен запрос на логин:", email); // Лог входных данных (без пароля!)
+
     const query = "SELECT * FROM Holodka WHERE email = ?";
     connection.query(query, [email], (err, result) => {
-        if (err) return res.status(500).json({ error: "Ошибка сервера" });
+        if (err) {
+            console.error("❌ Ошибка БД:", err);
+            return res.status(500).json({ error: "Ошибка сервера (БД)" });
+        }
 
         if (result.length === 0) {
+            console.warn("⚠ Пользователь не найден:", email);
             return res.status(404).json({ error: "Пользователь не найден" });
         }
 
         const user = result[0];
 
-        // Простое сравнение паролей (⚠ НЕБЕЗОПАСНО!)
+        // Проверка пароля
         if (password !== user.password) {
+            console.warn("⚠ Неверный пароль для:", email);
             return res.status(401).json({ error: "Неверный пароль" });
         }
 
-        // Генерация JWT токена
+        // Генерация токена
         const token = jwt.sign(
             { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin },
             JWT_SECRET,
             { expiresIn: "6h" }
         );
 
+        console.log("✅ Успешный логин:", email);
         res.status(200).json({ token });
     });
 });
