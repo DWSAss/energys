@@ -10,7 +10,7 @@
     "react-scripts": "^5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "PORT=3000 react-scripts start",
     "client": "npm start",
     "server": "nodemon server/server.js",
     "build": "npm run build",
