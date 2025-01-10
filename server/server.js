@@ -12,6 +12,13 @@ app.listen(port, () => {
     console.log(`🚀 Сервер запущен на порту ${port}`);
 });
 
+app.get("/", (req, res) => {
+    res.send("Сервер работает!");
+  });
+  
+
+  const cors = require("cors");
+app.use(cors({ origin: "*" })); // Разрешить доступ с любого источника
 
 const JWT_SECRET = "secret_key"; 
 // Лучше использовать process.env.JWT_SECRET
