@@ -8,31 +8,27 @@ const path = require("path");
 const app = express();
 const port = process.env.PORT || 10001;
 
-// Разрешаем CORS
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// Подключение к базе данных
-const connection = mysql.createConnection({
+// Создаем пул соединений
+const pool = mysql.createPool({
     host: process.env.DB_HOST || "localhost",
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "test_db",
     port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
 });
 
-connection.connect((err) => {
-    if (err) {
-        console.error("Ошибка подключения к БД:", err);
-        return;
-    }
-    console.log("✅ Успешное подключение к базе данных");
-});
+// Преобразуем pool в Promises API
+const db = pool.promise();
 
-// **ХРАНИТЕ В .env** (process.env.JWT_SECRET)
 const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
 
-// Проверка токена
+// Middleware для проверки токена
 const authenticateToken = (req, res, next) => {
     const token = req.header("Authorization")?.split(" ")[1];
     if (!token) return res.status(403).json({ error: "Нет токена" });
@@ -45,7 +41,7 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// Проверка прав администратора (isAdmin === 1)
+// Middleware для проверки админских прав
 const verifyAdmin = (req, res, next) => {
     if (req.user.isAdmin !== 1) {
         return res.status(403).json({ error: "Нет прав администратора" });
@@ -53,44 +49,35 @@ const verifyAdmin = (req, res, next) => {
     next();
 };
 
-// Регистрация пользователя (БЕЗ ХЕШИРОВАНИЯ)
-app.post("/register", (req, res) => {
+// Регистрация пользователя
+app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
 
     if (password.length < 8) {
         return res.status(400).json({ error: "Пароль слишком короткий" });
     }
 
-    const checkQuery = "SELECT * FROM Holodka WHERE email = ?";
-    connection.query(checkQuery, [email], (err, result) => {
-        if (err) return res.status(500).json({ error: "Ошибка сервера" });
-
+    try {
+        const [result] = await db.query("SELECT * FROM Holodka WHERE email = ?", [email]);
         if (result.length > 0) {
             return res.status(400).json({ error: "Пользователь уже существует" });
         }
 
-        const insertQuery = "INSERT INTO Holodka (name, email, password, isAdmin) VALUES (?, ?, ?, 0)";
-        connection.query(insertQuery, [name, email, password], (err) => {
-            if (err) return res.status(500).json({ error: "Ошибка сервера" });
-
-            res.status(201).json({ message: "Пользователь зарегистрирован" });
-        });
-    });
+        await db.query("INSERT INTO Holodka (name, email, password, isAdmin) VALUES (?, ?, ?, 0)", [name, email, password]);
+        res.status(201).json({ message: "Пользователь зарегистрирован" });
+    } catch (err) {
+        console.error("Ошибка БД:", err);
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
 });
 
-// Логин (БЕЗ ХЕШИРОВАНИЯ)
-app.post("/login", (req, res) => {
+// Логин пользователя
+app.post("/login", async (req, res) => {
     const { email, password } = req.body;
+    console.log("📩 Получен запрос на логин:", email);
 
-    console.log("📩 Получен запрос на логин:", email); // Лог входных данных (без пароля!)
-
-    const query = "SELECT * FROM Holodka WHERE email = ?";
-    connection.query(query, [email], (err, result) => {
-        if (err) {
-            console.error("❌ Ошибка БД:", err);
-            return res.status(500).json({ error: "Ошибка сервера (БД)" });
-        }
-
+    try {
+        const [result] = await db.query("SELECT * FROM Holodka WHERE email = ?", [email]);
         if (result.length === 0) {
             console.warn("⚠ Пользователь не найден:", email);
             return res.status(404).json({ error: "Пользователь не найден" });
@@ -98,13 +85,11 @@ app.post("/login", (req, res) => {
 
         const user = result[0];
 
-        // Проверка пароля
         if (password !== user.password) {
             console.warn("⚠ Неверный пароль для:", email);
             return res.status(401).json({ error: "Неверный пароль" });
         }
 
-        // Генерация токена
         const token = jwt.sign(
             { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin },
             JWT_SECRET,
@@ -113,49 +98,50 @@ app.post("/login", (req, res) => {
 
         console.log("✅ Успешный логин:", email);
         res.status(200).json({ token });
-    });
+    } catch (err) {
+        console.error("❌ Ошибка БД:", err);
+        res.status(500).json({ error: "Ошибка сервера (БД)" });
+    }
 });
 
 // Получение информации о пользователе
-app.get("/account", authenticateToken, (req, res) => {
-    console.log("✅ Декодированный токен:", req.user); // Посмотрим, есть ли userId
+app.get("/account", authenticateToken, async (req, res) => {
+    console.log("✅ Декодированный токен:", req.user);
 
-    const userId = req.user.id;
-
-    const query = "SELECT id, name, email, isAdmin FROM Holodka WHERE id = ?";
-    connection.query(query, [userId], (err, result) => {
-        if (err) return res.status(500).json({ error: "Ошибка сервера" });
+    try {
+        const [result] = await db.query("SELECT id, name, email, isAdmin FROM Holodka WHERE id = ?", [req.user.id]);
 
         if (result.length === 0) {
             return res.status(404).json({ message: "Пользователь не найден" });
         }
 
         res.json(result[0]);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
 });
 
-// Получение списка пользователей (только для админов)
-app.get("/admin/users", authenticateToken, verifyAdmin, (req, res) => {
-    const query = "SELECT id, name, email, isAdmin FROM Holodka";
-    connection.query(query, (err, result) => {
-        if (err) return res.status(500).json({ error: "Ошибка сервера" });
-
+// Получение списка пользователей (только админы)
+app.get("/admin/users", authenticateToken, verifyAdmin, async (req, res) => {
+    try {
+        const [result] = await db.query("SELECT id, name, email, isAdmin FROM Holodka");
         res.status(200).json(result);
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
 });
 
 // Удаление пользователя (только админы)
-app.delete("/admin/users/:id", authenticateToken, verifyAdmin, (req, res) => {
-    const { id } = req.params;
-    const query = "DELETE FROM Holodka WHERE id = ?";
-    connection.query(query, [id], (err) => {
-        if (err) return res.status(500).json({ error: "Ошибка сервера" });
-
+app.delete("/admin/users/:id", authenticateToken, verifyAdmin, async (req, res) => {
+    try {
+        await db.query("DELETE FROM Holodka WHERE id = ?", [req.params.id]);
         res.status(200).json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
 });
 
-// **Обслуживание статических файлов клиента**
+// Обслуживание статических файлов
 const clientPath = path.join(__dirname, "..", "client", "build");
 app.use(express.static(clientPath));
 
