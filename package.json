@@ -24,7 +24,7 @@
   "start": "concurrently \"npm run server\" \"npm run client\"",
   "server": "nodemon server/server.js",
   "client": "cd client && npm start",
-  "build": "cd client && npm run build",  
+  "build": "cd client && react-scripts build",  
   "test": "cd client && npm test",
   "eject": "cd client && npm run eject"
 },
