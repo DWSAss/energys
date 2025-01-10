@@ -10,14 +10,19 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const token = localStorage.getItem("token");
-        const storedRole = localStorage.getItem("role"); // Получаем роль пользователя
-        const storedName = localStorage.getItem("name"); // Получаем имя пользователя из localStorage
-
-        console.log("userName из localStorage:", storedName); // Лог для отладки
-        setRole(storedRole);
-        setUserName(storedName); // Устанавливаем имя пользователя
-        setIsAuthenticated(!!token);
-    }, []);
+      
+        console.log("🔍 Загруженный токен в Account:", token);
+      
+        if (!token) {
+          console.warn("🚨 Токен не найден, выход из Account");
+          setError("Ошибка: отсутствует токен.");
+          return;
+        }
+      
+        fetchAccountData(); // Запрашиваем данные пользователя
+      
+      }, [isAuthenticated]); // Теперь useEffect зависит от isAuthenticated!
+      
 
     const decodeToken = (token) => {
         try {
