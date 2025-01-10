@@ -40,10 +40,11 @@ function App() {
 
 // Компонент Header
 const Header = () => {
+
+  const { role, isAuthenticated } = useAuth();  // Получаем данные из контекста
   const [account, setAccount] = useState(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth(); // Получаем статус аутентификации
 
   const getAccountData = async (token) => {
     try {
@@ -88,7 +89,6 @@ const Header = () => {
     localStorage.removeItem("isAdmin");
     navigate("/login");  // Перенаправляем на страницу входа
   };
-
   return (
     <header className="header">
       <div className="logo">Энергосбыт</div>
@@ -99,7 +99,6 @@ const Header = () => {
         <Link to="/account">My Account</Link>
         {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
-        <button className="btn logout" onClick={handleLogout}>Выйти</button>
       </nav>
     </header>
   );
