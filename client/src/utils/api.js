@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Создание экземпляра axios для API
 const api = axios.create({
@@ -8,115 +8,85 @@ const api = axios.create({
     },
 });
 
+// Автоматически добавляем токен в каждый запрос
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token"); // Берем токен из localStorage
+    if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+});
 
-// Регистрация
+// Перехватываем ошибки ответа (например, 401 - неавторизован)
+api.interceptors.response.use(
+    (response) => response, 
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            console.warn("⛔ Токен недействителен! Разлогиниваем пользователя...");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            window.location.href = "/login"; // Перенаправляем на страницу входа
+        }
+        return Promise.reject(error);
+    }
+);
+
+// ✅ Регистрируем пользователя
 export const register = async (name, email, password) => {
     try {
-        if (process.env.NODE_ENV === 'development') {
-            console.log("Sending registration data:", { name, email, password });
-        }
         const response = await api.post("/register", { name, email, password });
         return response.data;
     } catch (error) {
-        console.error("Registration error:", error.response ? error.response.data : error.message);
-
-        // Если сервер вернул конкретное сообщение об ошибке
-        if (error.response && error.response.data) {
-            const serverMessage = error.response.data.error || error.response.data.message || "Ошибка регистрации";
-            throw new Error(serverMessage);
-        }
-
-        // Если сообщение отсутствует, выбрасываем стандартное
-        throw new Error("Registration failed. Please try again.");
+        console.error("Registration error:", error.response?.data || error.message);
+        throw new Error(error.response?.data?.error || "Ошибка регистрации");
     }
 };
 
-// Логин
+// ✅ Вход пользователя
 export const login = async (email, password) => {
-    console.log(`Logging in with email: ${email}`);
-    
     try {
-        // Отправляем запрос на сервер
         const response = await api.post('/login', { email, password });
-
-        // Проверяем, есть ли данные в ответе
-        if (response && response.data) {
-            console.log("Login API response:", response.data);
-            return response.data; // Возвращаем данные, если все прошло успешно
+        if (response.data.token) {
+            localStorage.setItem("token", response.data.token);
+            return response.data;
         } else {
-            throw new Error('Неверный формат данных от сервера');
+            throw new Error("Ошибка входа");
         }
     } catch (error) {
-        // Обрабатываем ошибку
-        if (error.response) {
-            // Сервер вернул ответ с ошибкой (например, 404 или 500)
-            console.error("Login API error response:", error.response);
-            throw new Error(`Ошибка на сервере: ${error.response.statusText}`);
-        } else if (error.request) {
-            // Ошибка, связанная с запросом (например, отсутствие ответа)
-            console.error("Login API error request:", error.request);
-            throw new Error('Ошибка запроса. Попробуйте снова.');
-        } else {
-            // Любая другая ошибка
-            console.error("Login API error:", error.message);
-            throw new Error('Ошибка входа. Попробуйте снова.');
-        }
+        console.error("Login API error:", error.response?.data || error.message);
+        throw new Error(error.response?.data?.message || "Ошибка входа");
     }
 };
 
-
-// Получение данных о текущем пользователе
-export const getAccountData = async (token) => {
+// ✅ Получение данных о пользователе
+export const getAccountData = async () => {
     try {
-        const response = await api.get("/account", {
-            headers: { "Authorization": `Bearer ${token}` },
-        });
+        const response = await api.get("/account");
         return response.data;
     } catch (error) {
-        console.error("Error fetching account data:", error);
+        console.error("Ошибка при получении данных аккаунта:", error);
         throw error;
     }
 };
 
-// Получение дополнительных данных о пользователе
-export const getAccountDatas = async (token) => {
+// ✅ Получение всех пользователей (для админов)
+export const getAllUsers = async () => {
     try {
-        const response = await api.get("/apps", {
-            headers: { "Authorization": `Bearer ${token}` },
-        });
+        const response = await api.get('/admin/users');
         return response.data;
     } catch (error) {
-        console.error("Error fetching apps data:", error);
+        console.error("Ошибка при получении пользователей:", error);
         throw error;
     }
 };
 
-// Получение всех пользователей (админский маршрут)
-export const getAllUsers = async (token) => {
-    console.log("Fetching all users...");
+// ✅ Удаление пользователя (для админов)
+export const deleteUser = async (id) => {
     try {
-        const response = await api.get('/admin/users', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log("All users data:", response.data);
+        const response = await api.delete(`/admin/users/${id}`);
         return response.data;
     } catch (error) {
-        console.error("Error fetching all users:", error);
-        throw error;
-    }
-};
-
-// Удаление пользователя
-export const deleteUser = async (id, token) => {
-    console.log(`Deleting user with ID: ${id}`);
-    try {
-        const response = await api.delete(`/admin/users/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log("Delete user response:", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error deleting user:", error);
+        console.error("Ошибка при удалении пользователя:", error);
         throw error;
     }
 };
