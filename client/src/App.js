@@ -87,8 +87,10 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("isAdmin");
-    navigate("/login");  // Перенаправляем на страницу входа
+    navigate("/");  // Перенаправляем на страницу входа
+    window.location.reload(); // Перезагружаем страницу
   };
+  
   return (
     <header className="header">
       <div className="logo">Энергосбыт</div>
@@ -99,7 +101,7 @@ const Header = () => {
         <Link to="/account">My Account</Link>
         {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
-        <button className="btn logout" onClick={handleLogout}>Выйти</button>
+        <button className="btn logout" style={{color: "red"}} onClick={handleLogout}>Выйти</button>
       </nav>
     </header>
   );
