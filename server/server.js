@@ -118,6 +118,8 @@ app.post("/login", (req, res) => {
 
 // Получение информации о пользователе
 app.get("/account", authenticateToken, (req, res) => {
+    console.log("✅ Декодированный токен:", req.user); // Посмотрим, есть ли userId
+
     const userId = req.user.id;
 
     const query = "SELECT id, name, email, isAdmin FROM Holodka WHERE id = ?";
