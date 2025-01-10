@@ -25,6 +25,7 @@ const Login = () => {
                 updateAuthState(response.token, isAdmin);
 
                 navigate("/"); // Перенаправление после успешного логина
+                window.location.reload(); // Перезагружаем страницу
             } else {
                 setError("Не удалось войти. Проверьте введенные данные.");
             }
