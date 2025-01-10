@@ -99,6 +99,7 @@ const Header = () => {
         <Link to="/account">My Account</Link>
         {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
+        <button className="btn logout" onClick={handleLogout}>Выйти</button>
       </nav>
     </header>
   );
