@@ -11,9 +11,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "client": "npm start --prefix client ",
+    "client": "npm start",
     "server": "nodemon server/server.js",
-    "build": "npm run build --prefix client",
+    "build": "npm run build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
