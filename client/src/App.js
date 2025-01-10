@@ -40,7 +40,54 @@ function App() {
 
 // Компонент Header
 const Header = () => {
-  const { role, isAuthenticated } = useAuth();  // Получаем данные из контекста
+  const [account, setAccount] = useState(null);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth(); // Получаем статус аутентификации
+
+  const getAccountData = async (token) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/account`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при запросе аккаунта:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+  
+  
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    console.log("Token from localStorage:", token);  // Логируем полученный токен
+
+    if (!token) {
+      return;  // Если нет токена, не продолжаем выполнение
+    }
+
+    // Функция для получения данных пользователя
+    const fetchAccountData = async () => {
+      try {
+        const data = await getAccountData(token);
+        console.log("Account data:", data);  // Логируем данные аккаунта
+        setAccount(data);  // Устанавливаем данные аккаунта в состояние
+      } catch (error) {
+        console.error("Ошибка при получении данных пользователя:", error);
+        setError("Ошибка при загрузке данных.");
+      }
+    };
+
+    fetchAccountData();  // Вызов функции для получения данных
+  }, [navigate]);  // useEffect зависит от navigate (редиректа)
+
+  // Функция выхода
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAdmin");
+    navigate("/login");  // Перенаправляем на страницу входа
+  };
 
   return (
     <header className="header">
@@ -52,6 +99,7 @@ const Header = () => {
         <Link to="/account">My Account</Link>
         {isAuthenticated && role === "2" && <Link to="/apps">User Panel</Link>}
         {isAuthenticated && role === "1" && <Link to="/admin">Admin Panel</Link>}  {/* Панель администратора */}
+        <button className="btn logout" onClick={handleLogout}>Выйти</button>
       </nav>
     </header>
   );
